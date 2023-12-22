@@ -19,9 +19,10 @@ const (
 	modelType = "gemini-pro"
 
 	apiKeyEnvVar = "API_KEY"
-	apiKeyFlag   = "apiKey"
+	apiKeyFlag   = "api-key"
 	tempFlag     = "temperature"
 	maxTokenFlag = "tokens"
+	fileFlag     = "file"
 
 	maxTokensDefault = 100
 	tempDefault      = 0.9
@@ -33,6 +34,7 @@ type Chat struct {
 	apiKey      string
 	temperature float32
 	maxTokens   int32
+	files       []string
 }
 
 func (c *Chat) validate() error {
@@ -63,6 +65,20 @@ func (c *Chat) Close(_ context.Context) error {
 }
 
 func (c *Chat) Init(_ context.Context) error {
+	if flag.Lookup(fileFlag) == nil {
+		flag.Func(fileFlag, "", func(flagValue string) error {
+			for _, v := range strings.Fields(flagValue) {
+				_, err := os.Stat(v)
+				if err != nil {
+					fmt.Printf("file %s not found, skipping\n", v)
+				} else {
+					c.files = append(c.files, v)
+				}
+			}
+			return nil
+		})
+	}
+
 	if flag.Lookup(apiKeyFlag) == nil {
 		flag.Func(apiKeyFlag, "", func(flagValue string) error {
 			for _, v := range strings.Fields(flagValue) {
@@ -140,11 +156,26 @@ func (c *Chat) Start(ctx context.Context, scanner *bufio.Scanner) error {
 	cs := model.StartChat()
 	cs.History = []*genai.Content{}
 
+	// files
+	if len(c.files) > 0 {
+		for _, f := range c.files {
+			fmt.Printf("Describe content of %s:\n", f)
+			scanner.Scan()
+			txt, err := getFileContent(scanner.Text(), f)
+			if err != nil {
+				return errors.Wrapf(err, "error reading file: %s", f)
+			}
+			if resp, err := cs.SendMessage(ctx, genai.Text(txt)); err != nil {
+				if resp != nil && resp.PromptFeedback != nil {
+					fmt.Println(resp.PromptFeedback.BlockReason.String())
+				}
+				return errors.Wrapf(errors.Unwrap(err), "error sending file content: %s", f)
+			}
+		}
+	}
+
 	// send
 	send := func(msg string) {
-		// input
-		fmt.Printf("=== Me: %s\n=== Model:\n", msg)
-
 		// results
 		iter := cs.SendMessageStream(ctx, genai.Text(msg))
 		for {
@@ -186,4 +217,29 @@ func (c *Chat) Start(ctx context.Context, scanner *bufio.Scanner) error {
 	}
 
 	return nil
+}
+
+func getFileContent(desc, path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", errors.Wrapf(err, "error opening file: %s", path)
+	}
+	defer f.Close()
+
+	var content strings.Builder
+	scanner := bufio.NewScanner(f)
+
+	content.WriteString(desc)
+	content.WriteString("\n")
+
+	for scanner.Scan() {
+		content.WriteString(scanner.Text())
+		content.WriteString("\n")
+	}
+
+	if err := scanner.Err(); err != nil {
+		return "", errors.Wrapf(err, "error scanning file: %s", path)
+	}
+
+	return content.String(), nil
 }
