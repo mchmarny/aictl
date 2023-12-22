@@ -36,6 +36,8 @@ jobs:
 
   test:
     uses: ./.github/workflows/test.yaml
+    needs:
+    - conf
     permissions:
       contents: read
       security-events: write
@@ -49,6 +51,7 @@ jobs:
       hashes: ${{ steps.checksum.outputs.hashes }}
     runs-on: ubuntu-latest
     needs:
+    - conf
     - test
     permissions:
       contents: write
