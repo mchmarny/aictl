@@ -25,12 +25,16 @@ const (
 	apiKeyFlag   = "api-key"
 	tempFlag     = "temperature"
 	maxTokenFlag = "tokens"
+	topKFlag     = "top-k"
+	topPFlag     = "top-p"
 
-	filePrefix = "+file:"
-	urlPrefix  = "+url:"
+	filePrefix = "FILE:"
+	urlPrefix  = "URL:"
 
-	maxTokensDefault = 100
-	tempDefault      = 0.9
+	maxTokensDefault = 100 // 40-60 works (4 chars per token)
+	tempDefault      = 0.2
+	topKDefault      = 40
+	topPDefault      = 0.95
 )
 
 var (
@@ -45,6 +49,8 @@ type Chat struct {
 	apiKey      string
 	temperature float32
 	maxTokens   int32
+	topK        int32
+	topP        float32
 }
 
 func (c *Chat) validate() error {
@@ -110,6 +116,32 @@ func (c *Chat) Init(_ context.Context) error {
 		})
 	}
 
+	if flag.Lookup(topKFlag) == nil {
+		flag.Func(topKFlag, "", func(flagValue string) error {
+			for _, v := range strings.Fields(flagValue) {
+				vv, err := strconv.ParseInt(v, 10, 32)
+				if err != nil {
+					return errors.Wrapf(err, "invalid configuration value for '%s'", topKFlag)
+				}
+				c.topK = int32(vv)
+			}
+			return nil
+		})
+	}
+
+	if flag.Lookup(topPFlag) == nil {
+		flag.Func(topPFlag, "", func(flagValue string) error {
+			for _, v := range strings.Fields(flagValue) {
+				vv, err := strconv.ParseFloat(v, 32)
+				if err != nil {
+					return errors.Wrapf(err, "invalid configuration value for '%s'", topPFlag)
+				}
+				c.topP = float32(vv)
+			}
+			return nil
+		})
+	}
+
 	// defaults
 	if c.apiKey == "" {
 		c.apiKey = os.Getenv(apiKeyEnvVar)
@@ -121,6 +153,14 @@ func (c *Chat) Init(_ context.Context) error {
 
 	if c.temperature == 0 {
 		c.temperature = tempDefault
+	}
+
+	if c.topK == 0 {
+		c.topK = topKDefault
+	}
+
+	if c.topP == 0 {
+		c.topP = topPDefault
 	}
 
 	return nil
@@ -239,6 +279,8 @@ func (c *Chat) setup(ctx context.Context) error {
 	model := client.GenerativeModel(modelType)
 	model.SetTemperature(c.temperature)
 	model.SetMaxOutputTokens(c.maxTokens)
+	model.SetTopK(c.topK)
+	model.SetTopP(c.topP)
 	model.SafetySettings = []*genai.SafetySetting{
 		{
 			Category:  genai.HarmCategoryDangerousContent,

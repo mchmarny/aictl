@@ -1,6 +1,8 @@
 # aictl
 
-When interacting with AI models like [gemini-pro](https://ai.google.dev/models/gemini#model_variations) there are times when you need to add additional context to to support specific prompts based on data of which the model is not aware. This often includes coping and pasting content into the AI chatbot terminal (e.g. [bard](https://bard.google.com)). This terminal app allows for easier interaction with external data using prompts that add either local files (e.g. `+file:path`) or external resources (e.g. `+url:url`).
+When interacting with AI models like [gemini-pro](https://ai.google.dev/models/gemini#model_variations) there are times when you need to add additional context to to support specific prompts based on data of which the model is not aware. This often includes coping and pasting content into the AI chatbot terminal (e.g. [bard](https://bard.google.com)). This terminal app allows for easier interaction with external data using prompts that add either local files (e.g. `FILE:path`) or external resources (e.g. `URL:url`).
+
+> The above content prompts must in upper case and at the be at the at beginning of user input.
 
 ## Install 
 
@@ -49,17 +51,19 @@ If you haven't defined the `API_KEY` environment variable, you will have to pass
 aictl --api-key your-key-goes-here
 ```
 
-Additional parameters that can be passed as flags: 
+Additional parameters that can be passed as flags. More details available [here](https://ai.google.dev/docs/prompt_best_practices#experiment-with-different-parameter-values):
 
 * `temperature` (float `0.0` to `1.0`, default: `0.9`) the lower the number the more predictable the answers, higher numbers result in more creative responses.
 * `tokens` (int `1` to `2048`, default: `100`) the maximum number of output tokens that will be returned from each prompt.
+* `top-p` (float `0.0` to `1.0`, default: `0.9`) combined with `temperature` changes how the model selects tokens for output. Lower value results in less random responses. 
+* `top-k` (int, default: `40`) combined with `temperature` changes how the model selects tokens for output. Lower value results in less random responses. 
 
 ## Context
 
-You can add your own context into the chat by inserting file content using `+file:` or remote content using `+url:` references. For example, at the chat prompt:
+You can add your own context into the chat by inserting file content using `FILE:` or remote content using `URL:` references. For example, at the chat prompt:
 
 ```shell
-+file:content/monthly-gas-price.csv
+FILE:content/monthly-gas-price.csv
 ```
 
 The chat will ask you first for description of the file to understand its content:
