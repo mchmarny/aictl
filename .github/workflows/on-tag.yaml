@@ -11,9 +11,9 @@ jobs:
 
   conf:
     env:
-      GO_VERSION: ^1.20.5
+      GO_VERSION: ^1.21.5
       SYFT_VERSION: v0.14.1
-      LINTER_VERSION: v1.53.2
+      LINTER_VERSION: v1.55.2
       ERR_VULNERABILITY_SEV: "CRITICAL,HIGH,MEDIUM"
 
     runs-on: ubuntu-latest
@@ -84,7 +84,7 @@ jobs:
         args: release --clean
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+        # HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
     - name: Gen Hashes
       id: checksum
       env:
@@ -123,7 +123,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "vimp*"
+          gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "aictl*"
           gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "$ATT_FILE_NAME"
       - name: Verify Assets
         env:
