@@ -87,6 +87,14 @@ Here is a breakdown of the average gas prices by year:
 * 2013: $3.638
 ```
 
+Similarly, you can add context to your prompts using remote content by passing one or more URLs:
+
+> Note, that URL must be publicly accessible. 
+
+```shell
+aictl --url https://ai.google.dev/docs/safety_guidance
+```
+
 
 ## Disclaimer
 

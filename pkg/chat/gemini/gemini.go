@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	"github.com/google/generative-ai-go/genai"
+	"github.com/mchmarny/aictl/pkg/content/file"
+	"github.com/mchmarny/aictl/pkg/content/url"
 	"github.com/pkg/errors"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -23,6 +25,7 @@ const (
 	tempFlag     = "temperature"
 	maxTokenFlag = "tokens"
 	fileFlag     = "file"
+	urlFlag      = "url"
 
 	maxTokensDefault = 100
 	tempDefault      = 0.9
@@ -35,6 +38,7 @@ type Chat struct {
 	temperature float32
 	maxTokens   int32
 	files       []string
+	urls        []string
 }
 
 func (c *Chat) validate() error {
@@ -75,6 +79,13 @@ func (c *Chat) Init(_ context.Context) error {
 					c.files = append(c.files, v)
 				}
 			}
+			return nil
+		})
+	}
+
+	if flag.Lookup(urlFlag) == nil {
+		flag.Func(urlFlag, "", func(flagValue string) error {
+			c.urls = append(c.urls, strings.Fields(flagValue)...)
 			return nil
 		})
 	}
@@ -156,20 +167,42 @@ func (c *Chat) Start(ctx context.Context, scanner *bufio.Scanner) error {
 	cs := model.StartChat()
 	cs.History = []*genai.Content{}
 
+	sendContent := func(src, txt string) error {
+		if resp, err := cs.SendMessage(ctx, genai.Text(txt)); err != nil {
+			if resp != nil && resp.PromptFeedback != nil {
+				fmt.Println(resp.PromptFeedback.BlockReason.String())
+			}
+			return errors.Wrapf(errors.Unwrap(err), "error sending file content: %s", src)
+		}
+		return nil
+	}
+
 	// files
 	if len(c.files) > 0 {
 		for _, f := range c.files {
 			fmt.Printf("Describe content of %s:\n", f)
 			scanner.Scan()
-			txt, err := getFileContent(scanner.Text(), f)
+			txt, err := file.GetContent(scanner.Text(), f)
 			if err != nil {
 				return errors.Wrapf(err, "error reading file: %s", f)
 			}
-			if resp, err := cs.SendMessage(ctx, genai.Text(txt)); err != nil {
-				if resp != nil && resp.PromptFeedback != nil {
-					fmt.Println(resp.PromptFeedback.BlockReason.String())
-				}
-				return errors.Wrapf(errors.Unwrap(err), "error sending file content: %s", f)
+			if err := sendContent(f, txt); err != nil {
+				return err
+			}
+		}
+	}
+
+	// urls
+	if len(c.urls) > 0 {
+		for _, u := range c.urls {
+			fmt.Printf("Describe content of %s:\n", u)
+			scanner.Scan()
+			txt, err := url.GetContent(scanner.Text(), u)
+			if err != nil {
+				return errors.Wrapf(err, "error reading URL: %s", u)
+			}
+			if err := sendContent(u, txt); err != nil {
+				return err
 			}
 		}
 	}
@@ -217,29 +250,4 @@ func (c *Chat) Start(ctx context.Context, scanner *bufio.Scanner) error {
 	}
 
 	return nil
-}
-
-func getFileContent(desc, path string) (string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return "", errors.Wrapf(err, "error opening file: %s", path)
-	}
-	defer f.Close()
-
-	var content strings.Builder
-	scanner := bufio.NewScanner(f)
-
-	content.WriteString(desc)
-	content.WriteString("\n")
-
-	for scanner.Scan() {
-		content.WriteString(scanner.Text())
-		content.WriteString("\n")
-	}
-
-	if err := scanner.Err(); err != nil {
-		return "", errors.Wrapf(err, "error scanning file: %s", path)
-	}
-
-	return content.String(), nil
 }
