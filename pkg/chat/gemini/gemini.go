@@ -21,6 +21,7 @@ const (
 	modelType = "gemini-pro"
 
 	apiKeyEnvVar = "API_KEY"
+
 	apiKeyFlag   = "api-key"
 	tempFlag     = "temperature"
 	maxTokenFlag = "tokens"
@@ -39,6 +40,7 @@ var (
 
 type Chat struct {
 	client *genai.Client
+	model  *genai.GenerativeModel
 
 	apiKey      string
 	temperature float32
@@ -134,38 +136,13 @@ func (c *Chat) Start(ctx context.Context, scanner *bufio.Scanner) error {
 		return errors.New("missing scanner parameter")
 	}
 
-	// client
-	client, err := genai.NewClient(ctx, option.WithAPIKey(c.apiKey))
-	if err != nil {
-		return errors.Wrapf(err, "error creating GenAI client: %s", err.Error())
-	}
-	c.client = client
-
 	// model
-	model := client.GenerativeModel(modelType)
-	model.SetTemperature(c.temperature)
-	model.SetMaxOutputTokens(c.maxTokens)
-	model.SafetySettings = []*genai.SafetySetting{
-		{
-			Category:  genai.HarmCategoryDangerousContent,
-			Threshold: genai.HarmBlockNone,
-		},
-		{
-			Category:  genai.HarmCategoryHarassment,
-			Threshold: genai.HarmBlockNone,
-		},
-		{
-			Category:  genai.HarmCategorySexuallyExplicit,
-			Threshold: genai.HarmBlockNone,
-		},
-		{
-			Category:  genai.HarmCategoryHateSpeech,
-			Threshold: genai.HarmBlockNone,
-		},
+	if err := c.setup(ctx); err != nil {
+		return err
 	}
 
 	// chat
-	cs := model.StartChat()
+	cs := c.model.StartChat()
 
 	// send
 	send := func(msg string) {
@@ -246,6 +223,42 @@ func (c *Chat) Start(ctx context.Context, scanner *bufio.Scanner) error {
 	if scanner.Err() != nil {
 		return errors.Wrapf(scanner.Err(), "error scanning input: %s", scanner.Err().Error())
 	}
+
+	return nil
+}
+
+func (c *Chat) setup(ctx context.Context) error {
+	// client
+	client, err := genai.NewClient(ctx, option.WithAPIKey(c.apiKey))
+	if err != nil {
+		return errors.Wrapf(err, "error creating GenAI client: %s", err.Error())
+	}
+	c.client = client
+
+	// model
+	model := client.GenerativeModel(modelType)
+	model.SetTemperature(c.temperature)
+	model.SetMaxOutputTokens(c.maxTokens)
+	model.SafetySettings = []*genai.SafetySetting{
+		{
+			Category:  genai.HarmCategoryDangerousContent,
+			Threshold: genai.HarmBlockNone,
+		},
+		{
+			Category:  genai.HarmCategoryHarassment,
+			Threshold: genai.HarmBlockNone,
+		},
+		{
+			Category:  genai.HarmCategorySexuallyExplicit,
+			Threshold: genai.HarmBlockNone,
+		},
+		{
+			Category:  genai.HarmCategoryHateSpeech,
+			Threshold: genai.HarmBlockNone,
+		},
+	}
+
+	c.model = model
 
 	return nil
 }
