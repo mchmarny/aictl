@@ -15,8 +15,7 @@ func TestChat(t *testing.T) {
 
 	t.Run("Init without API key", func(t *testing.T) {
 		err := c.Init(context.TODO())
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), apiKeyFlag)
+		assert.NoError(t, err)
 	})
 
 	t.Run("Start without API key", func(t *testing.T) {

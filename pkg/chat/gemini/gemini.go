@@ -111,7 +111,7 @@ func (c *Chat) Init(_ context.Context) error {
 		c.temperature = tempDefault
 	}
 
-	return c.validate()
+	return nil
 }
 
 func (c *Chat) Start(ctx context.Context, scanner *bufio.Scanner) error {
