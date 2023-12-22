@@ -59,19 +59,19 @@ Additional parameters that can be passed as flags:
 * `temperature` (float 0.0 to 1.0, default: 0.9) the lower the number the more predictable the answers, higher numbers result in more creative responses.
 * `tokens` (int 1 to 2048, default: 100) the maximum number of output tokens that will be returned from each prompt.
 
-You can also add your own context into the chat by providing one or more data source files: 
+## Context
+
+You can add your own context into the chat by inserting file content using `+file:`, or remote content using `+url:`. For example:
 
 ```shell
-aictl --file content/annual-us-gdp.csv --file content/monthly-gas-price.csv
++file:content/monthly-gas-price.csv
 ```
 
-For each one of the files you will be asked to provide a description to help chat understand the context:
+The chat will ask you first for description of the file to understand its content:
 
 ```shell
 chat: Describe content of content/annual-us-gdp.csv:
 you: Annual US Gross Domestic Productivity
-chat: Describe content of content/monthly-gas-price.csv:
-you: Averaged annual gas prices in US
 ```
 
 So then in chat you can combine that data with the content chat already knows: 
@@ -79,22 +79,8 @@ So then in chat you can combine that data with the content chat already knows:
 ```shell
 chat: How can I help?
 you: What was the average gas price in US between 2010 and 2015?
-chat: The average gas price in the US between 2010 and 2015 was **$3.618** per gallon.
-Here is a breakdown of the average gas prices by year:
-* 2010: $3.430
-* 2011: $3.569
-* 2012: $3.622
-* 2013: $3.638
+chat: The average gas price in the US between 2010 and 2015 was $3.618 per gallon.
 ```
-
-Similarly, you can add context to your prompts using remote content by passing one or more URLs:
-
-> Note, that URL must be publicly accessible. 
-
-```shell
-aictl --url https://ai.google.dev/docs/safety_guidance
-```
-
 
 ## Disclaimer
 
