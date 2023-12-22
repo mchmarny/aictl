@@ -46,9 +46,6 @@ digest.txt
 /images
 images.txt
 
-# CSVs
-*.csv
-
 # Data
 /data
 *.db
