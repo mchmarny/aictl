@@ -1,11 +1,6 @@
 # aictl
 
-WIP: Simple command line interface to AI models.
-
-Currently supported models: 
-
-* [gemini-pro](https://ai.google.dev/models/gemini#model_variations)
-
+When interacting with AI models like [gemini-pro](https://ai.google.dev/models/gemini#model_variations) there are times when you need to add additional context to to support specific prompts based on data of which the model is not aware. This often includes coping and pasting content into the AI chatbot terminal (e.g. [bard](https://bard.google.com)). This terminal app allows for easier interaction with external data using prompts that add either local files (e.g. `+file:path`) or external resources (e.g. `+url:url`).
 
 ## Install 
 
@@ -56,12 +51,12 @@ aictl --api-key your-key-goes-here
 
 Additional parameters that can be passed as flags: 
 
-* `temperature` (float 0.0 to 1.0, default: 0.9) the lower the number the more predictable the answers, higher numbers result in more creative responses.
-* `tokens` (int 1 to 2048, default: 100) the maximum number of output tokens that will be returned from each prompt.
+* `temperature` (float `0.0` to `1.0`, default: `0.9`) the lower the number the more predictable the answers, higher numbers result in more creative responses.
+* `tokens` (int `1` to `2048`, default: `100`) the maximum number of output tokens that will be returned from each prompt.
 
 ## Context
 
-You can add your own context into the chat by inserting file content using `+file:`, or remote content using `+url:`. For example:
+You can add your own context into the chat by inserting file content using `+file:` or remote content using `+url:` references. For example, at the chat prompt:
 
 ```shell
 +file:content/monthly-gas-price.csv
