@@ -35,6 +35,8 @@ const (
 	tempDefault      = 0.2
 	topKDefault      = 40
 	topPDefault      = 0.95
+
+	modelContentResponse = "Thank you for the context. What would you like to know?"
 )
 
 var (
@@ -208,6 +210,22 @@ func (c *Chat) Start(ctx context.Context, scanner *bufio.Scanner) error {
 		aiStyle.Println()
 	}
 
+	// load history
+	load := func(msg string) {
+		h := []*genai.Content{
+			{
+				Parts: []genai.Part{genai.Text(msg)},
+				Role:  "user",
+			},
+			{
+				Parts: []genai.Part{genai.Text(modelContentResponse)},
+				Role:  "model",
+			},
+		}
+		cs.History = append(cs.History, h...)
+		aiStyle.Printf("%s:\n", modelContentResponse)
+	}
+
 	// files
 	readFile := func(f string) error {
 		aiStyle.Printf("Describe content of %s:\n", f)
@@ -216,7 +234,7 @@ func (c *Chat) Start(ctx context.Context, scanner *bufio.Scanner) error {
 		if err != nil {
 			return errors.Wrapf(err, "error reading file: %s", f)
 		}
-		send(txt)
+		load(txt)
 		return nil
 	}
 
@@ -228,7 +246,7 @@ func (c *Chat) Start(ctx context.Context, scanner *bufio.Scanner) error {
 		if err != nil {
 			return errors.Wrapf(err, "error reading URL: %s", u)
 		}
-		send(txt)
+		load(txt)
 		return nil
 	}
 

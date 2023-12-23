@@ -1,8 +1,10 @@
-RELEASE_VERSION :=$(shell cat .version)
-YAML_FILES      :=$(shell find . -type f -regex ".*y*ml" -print)
+VERSION :=$(shell cat .version)
+YAMLS   :=$(shell find . -type f -regex ".*y*ml" -print)
+COMMIT  :=$(shell git rev-parse --short HEAD)
+DATE    :=$(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 
 ## Variable assertions
-ifndef RELEASE_VERSION
+ifndef VERSION
 	$(error RELEASE_VERSION is not set)
 endif
 
@@ -10,7 +12,7 @@ all: help
 
 .PHONY: version
 version: ## Prints the current version
-	@echo $(RELEASE_VERSION)
+	@echo $(VERSION)
 
 .PHONY: tidy
 tidy: ## Updates the go modules and vendors all dependancies 
@@ -41,7 +43,7 @@ lint-go: ## Lints the entire project using go
 
 .PHONY: lint-yaml
 lint-yaml: ## Runs yamllint on all yaml files (brew install yamllint)
-	yamllint -c .yamllint $(YAML_FILES)
+	yamllint -c .yamllint $(YAMLS)
 
 .PHONY: run
 run: tidy ## Runs uncompiled version of the CLI
@@ -50,20 +52,22 @@ run: tidy ## Runs uncompiled version of the CLI
 .PHONY: build
 build: tidy ## Builds CLI binary
 	mkdir -p ./bin
-	CGO_ENABLED=0 go build -trimpath -ldflags="\
-    -w -s -X main.version=$(RELEASE_VERSION) \
+	CGO_ENABLED=0 go build -trimpath -ldflags="-s -w \
+    -X github.com/mchmarny/aictl/pkg/cli.version=$(VERSION) \
+	-X github.com/mchmarny/aictl/pkg/cli.commit=$(COMMIT) \
+	-X github.com/mchmarny/aictl/pkg/cli.date=$(DATE) \
 	-extldflags '-static'" \
     -mod vendor -o bin/aictl main.go
 
 .PHONY: tag
 tag: ## Creates release tag 
-	git tag -s -m "release $(RELEASE_VERSION)" $(RELEASE_VERSION)
-	git push origin $(RELEASE_VERSION)
+	git tag -s -m "release $(VERSION)" $(VERSION)
+	git push origin $(VERSION)
 
 .PHONY: tagless
 tagless: ## Delete the current release tag 
-	git tag -d $(RELEASE_VERSION)
-	git push --delete origin $(RELEASE_VERSION)
+	git tag -d $(VERSION)
+	git push --delete origin $(VERSION)
 
 .PHONY: clean
 clean: ## Cleans bin and temp directories
