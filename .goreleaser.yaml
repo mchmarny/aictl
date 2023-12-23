@@ -22,7 +22,7 @@ builds:
   flags:
   - -trimpath
   ldflags:
-  - -s -w 
+  - -s -w
   - -X github.com/mchmarny/aictl/pkg/cli.version={{.Version}}
   - -X github.com/mchmarny/aictl/pkg/cli.commit={{.ShortCommit}}
   - -X github.com/mchmarny/aictl/pkg/cli.date={{.Date}}
