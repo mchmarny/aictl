@@ -8,7 +8,7 @@ require (
 	github.com/k3a/html2text v1.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.4
-	google.golang.org/api v0.154.0
+	google.golang.org/api v0.155.0
 )
 
 require (
