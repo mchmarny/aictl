@@ -75,7 +75,7 @@ jobs:
     - name: Prune Git History
       run: git fetch --prune --unshallow
     - name: Install Syft
-      uses: anchore/sbom-action/download-syft@5ecf649a417b8ae17dc8383dc32d46c03f2312df  # v0.15.1
+      uses: anchore/sbom-action/download-syft@41f7a6c033dbcdf78917f23b652c8b8146298c85  # v0.15.4
       with:
         version: ${{ needs.conf.outputs.syft_version }}
     - name: Build CLI
