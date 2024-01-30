@@ -43,7 +43,7 @@ jobs:
       run: |
         make tidy
     - name: Install Grype
-      uses: anchore/scan-action/download-grype@4be3c24559b430723e51858969965e163b196957  # v3.3.5
+      uses: anchore/scan-action/download-grype@1c57367e29d11f99ae56571e49f95f1a1991945e  # v3.6.3
     - name: Unit Test
       run: |
         make test
