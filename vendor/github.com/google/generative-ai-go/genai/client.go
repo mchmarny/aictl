@@ -15,9 +15,8 @@
 // To get the protoveneer tool:
 //    go install golang.org/x/exp/protoveneer/cmd/protoveneer@latest
 
-//go:generate protoveneer config.yaml ../../../googleapis/google-cloud-go/ai/generativelanguage/apiv1/generativelanguagepb
+//go:generate protoveneer -license license.txt config.yaml ../../../googleapis/google-cloud-go/ai/generativelanguage/apiv1/generativelanguagepb
 
-// Package genai is a client for the Google Labs generative AI model.
 package genai
 
 import (
@@ -212,6 +211,20 @@ func (m *GenerativeModel) newCountTokensRequest(contents ...*Content) *pb.CountT
 		Model:    m.fullName,
 		Contents: support.TransformSlice(contents, (*Content).toProto),
 	}
+}
+
+// Info returns information about the model.
+func (m *GenerativeModel) Info(ctx context.Context) (*ModelInfo, error) {
+	return m.c.modelInfo(ctx, m.fullName)
+}
+
+func (c *Client) modelInfo(ctx context.Context, fullName string) (*ModelInfo, error) {
+	req := &pb.GetModelRequest{Name: fullName}
+	res, err := c.mc.GetModel(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return (ModelInfo{}).fromProto(res), nil
 }
 
 // A BlockedError indicates that the model's response was blocked.
