@@ -15,15 +15,16 @@
 // To get the protoveneer tool:
 //    go install golang.org/x/exp/protoveneer/cmd/protoveneer@latest
 
-//go:generate protoveneer config.yaml ../../../googleapis/google-cloud-go/ai/generativelanguage/apiv1/generativelanguagepb
+//go:generate protoveneer -license license.txt config.yaml ../../../googleapis/google-cloud-go/ai/generativelanguage/apiv1/generativelanguagepb
 
-// Package genai is a client for the Google Labs generative AI model.
 package genai
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"reflect"
 	"strings"
 
 	gl "cloud.google.com/go/ai/generativelanguage/apiv1"
@@ -49,6 +50,13 @@ type Client struct {
 // You may configure the client by passing in options from the [google.golang.org/api/option]
 // package.
 func NewClient(ctx context.Context, opts ...option.ClientOption) (*Client, error) {
+	if !hasAPIKey(opts) {
+		return nil, errors.New(`You need an API key to use this client.
+Visit https://ai.google.dev to get one, put it in an environment variable like GEMINI_API_KEY,
+then pass it as an option:
+    genai.NewClient(ctx, option.WithAPIKey(os.Getenv("GEMINI_API_KEY")))
+Import the option package as "google.golang.org/api/option".`)
+	}
 	c, err := gl.NewGenerativeRESTClient(ctx, opts...)
 	if err != nil {
 		return nil, err
@@ -59,6 +67,20 @@ func NewClient(ctx context.Context, opts ...option.ClientOption) (*Client, error
 	}
 	c.SetGoogleClientInfo("gccl", internal.Version)
 	return &Client{c: c, mc: mc}, nil
+}
+
+// hasAPIKey reports whether one of the options was created with
+// WithAPIKey.
+// There is no good way to do that, because the type of the option
+// is unexported, and the struct that it populates is in an internal package.
+func hasAPIKey(opts []option.ClientOption) bool {
+	for _, opt := range opts {
+		t := reflect.TypeOf(opt)
+		if t.String() == "option.withAPIKey" {
+			return true
+		}
+	}
+	return false
 }
 
 // Close closes the client.
@@ -78,7 +100,9 @@ type GenerativeModel struct {
 }
 
 // GenerativeModel creates a new instance of the named generative model.
-// For instance, "gemini-pro" or "models/gemini-pro".
+// For instance, "gemini-1.0-pro" or "models/gemini-1.0-pro".
+//
+// To access a tuned model named NAME, pass "tunedModels/NAME".
 func (c *Client) GenerativeModel(name string) *GenerativeModel {
 	return &GenerativeModel{
 		c:        c,
@@ -87,7 +111,7 @@ func (c *Client) GenerativeModel(name string) *GenerativeModel {
 }
 
 func fullModelName(name string) string {
-	if strings.HasPrefix(name, "models/") {
+	if strings.ContainsRune(name, '/') {
 		return name
 	}
 	return "models/" + name
@@ -212,6 +236,20 @@ func (m *GenerativeModel) newCountTokensRequest(contents ...*Content) *pb.CountT
 		Model:    m.fullName,
 		Contents: support.TransformSlice(contents, (*Content).toProto),
 	}
+}
+
+// Info returns information about the model.
+func (m *GenerativeModel) Info(ctx context.Context) (*ModelInfo, error) {
+	return m.c.modelInfo(ctx, m.fullName)
+}
+
+func (c *Client) modelInfo(ctx context.Context, fullName string) (*ModelInfo, error) {
+	req := &pb.GetModelRequest{Name: fullName}
+	res, err := c.mc.GetModel(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return (ModelInfo{}).fromProto(res), nil
 }
 
 // A BlockedError indicates that the model's response was blocked.

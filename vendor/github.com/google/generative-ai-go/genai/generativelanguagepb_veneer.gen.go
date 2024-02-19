@@ -23,6 +23,31 @@ import (
 	"github.com/google/generative-ai-go/internal/support"
 )
 
+// BatchEmbedContentsResponse is the response to a `BatchEmbedContentsRequest`.
+type BatchEmbedContentsResponse struct {
+	// Output only. The embeddings for each request, in the same order as provided
+	// in the batch request.
+	Embeddings []*ContentEmbedding
+}
+
+func (v *BatchEmbedContentsResponse) toProto() *pb.BatchEmbedContentsResponse {
+	if v == nil {
+		return nil
+	}
+	return &pb.BatchEmbedContentsResponse{
+		Embeddings: support.TransformSlice(v.Embeddings, (*ContentEmbedding).toProto),
+	}
+}
+
+func (BatchEmbedContentsResponse) fromProto(p *pb.BatchEmbedContentsResponse) *BatchEmbedContentsResponse {
+	if p == nil {
+		return nil
+	}
+	return &BatchEmbedContentsResponse{
+		Embeddings: support.TransformSlice(p.Embeddings, (ContentEmbedding{}).fromProto),
+	}
+}
+
 // Blob contains raw media bytes.
 //
 // Text should not be sent as raw bytes, use the 'text' field.
@@ -580,8 +605,8 @@ func (v HarmProbability) String() string {
 	return fmt.Sprintf("HarmProbability(%d)", v)
 }
 
-// Model is information about a Generative Language Model.
-type Model struct {
+// ModelInfo is information about a language model.
+type ModelInfo struct {
 	// Required. The resource name of the `Model`.
 	//
 	// Format: `models/{model}` with a `{model}` naming convention of:
@@ -597,7 +622,7 @@ type Model struct {
 	// Examples:
 	//
 	// * `chat-bison`
-	BaseModeID string
+	BaseModelID string
 	// Required. The version number of the model.
 	//
 	// This represents the major version
@@ -641,13 +666,13 @@ type Model struct {
 	TopK int32
 }
 
-func (v *Model) toProto() *pb.Model {
+func (v *ModelInfo) toProto() *pb.Model {
 	if v == nil {
 		return nil
 	}
 	return &pb.Model{
 		Name:                       v.Name,
-		BaseModelId:                v.BaseModeID,
+		BaseModelId:                v.BaseModelID,
 		Version:                    v.Version,
 		DisplayName:                v.DisplayName,
 		Description:                v.Description,
@@ -660,13 +685,13 @@ func (v *Model) toProto() *pb.Model {
 	}
 }
 
-func (Model) fromProto(p *pb.Model) *Model {
+func (ModelInfo) fromProto(p *pb.Model) *ModelInfo {
 	if p == nil {
 		return nil
 	}
-	return &Model{
+	return &ModelInfo{
 		Name:                       p.Name,
-		BaseModeID:                 p.BaseModelId,
+		BaseModelID:                p.BaseModelId,
 		Version:                    p.Version,
 		DisplayName:                p.DisplayName,
 		Description:                p.Description,
