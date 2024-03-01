@@ -7,7 +7,7 @@ require (
 	github.com/google/generative-ai-go v0.5.0
 	github.com/k3a/html2text v1.2.1
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	google.golang.org/api v0.154.0
 )
 
