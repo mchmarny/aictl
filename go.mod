@@ -4,7 +4,7 @@ go 1.21.5
 
 require (
 	github.com/fatih/color v1.16.0
-	github.com/google/generative-ai-go v0.5.0
+	github.com/google/generative-ai-go v0.9.0
 	github.com/k3a/html2text v1.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.4
@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	cloud.google.com/go v0.111.0 // indirect
 	cloud.google.com/go/ai v0.3.0 // indirect
 	cloud.google.com/go/compute v1.23.3 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect

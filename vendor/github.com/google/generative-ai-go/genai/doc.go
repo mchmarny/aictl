@@ -12,7 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
-
-// Version is the current tagged release of the library.
-const Version = "0.8.0"
+// Package genai is a client for the Google AI generative models.
+//
+// # Getting started
+//
+// Reading the [examples] is the best way to learn how to use this package.
+//
+// # Authorization
+//
+// You will need an API key to use the service.
+// See the [setup tutorial] for details.
+//
+// # Errors
+//
+// [examples]: https://pkg.go.dev/github.com/google/generative-ai-go/genai#pkg-examples
+// [setup tutorial]: https://ai.google.dev/tutorials/setup
+package genai
