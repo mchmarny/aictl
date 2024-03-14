@@ -16,7 +16,7 @@
 
 package: genai
 
-protoImportPath: cloud.google.com/go/ai/generativelanguage/apiv1/generativelanguagepb
+protoImportPath: cloud.google.com/go/ai/generativelanguage/apiv1beta/generativelanguagepb
 supportImportPath: github.com/google/generative-ai-go/internal/support
 
 types:
@@ -60,6 +60,7 @@ types:
         MimeType:
           name: MIMEType
       docVerb: contains
+      removeOtherDoc: true
 
     GenerationConfig:
 
@@ -82,6 +83,8 @@ types:
       fields:
         Index:
           type: int32
+        GroundingAttributions:
+          omit: true
 
     GenerateContentResponse_PromptFeedback:
       name: PromptFeedback
@@ -95,19 +98,34 @@ types:
         TaskType_TASK_TYPE_UNSPECIFIED: TaskTypeUnspecified
 
     EmbedContentResponse:
+    BatchEmbedContentsResponse:
 
     ContentEmbedding:
 
     Model:
+      name: ModelInfo
+      doc: 'is information about a language model.'
       fields:
         BaseModelId:
-          name: BaseModeID
+          name: BaseModelID
         Temperature:
           type: float32
         TopP:
           type: float32
         TopK:
           type: int32
+
+    # Types for function calling
+    Tool:
+    FunctionDeclaration:
+    FunctionCall:
+    FunctionResponse:
+    Schema:
+
+    Type:
+      protoPrefix: Type_
+      veneerPrefix: ''
+
 
 
 
